@@ -27,12 +27,41 @@ import {
 import Link from 'next/link'
 import SourcekomAgent from '@/components/agent/SourcekomAgent'
 
+interface Resource {
+  id: string
+  title: string
+  slug: string
+  description: string
+  price: number
+  isFree: boolean
+  location: string
+  thumbnail: string | null
+  images: string[]
+  isPublished: boolean
+  isFeatured: boolean
+  createdAt: string
+  author: {
+    id: string
+    name: string
+    avatar: string | null
+  }
+  category: {
+    id: string
+    name: string
+    slug: string
+  }
+  _count: {
+    purchases: number
+    reviews: number
+  }
+}
+
 export default function ResourcesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedPriceRange, setSelectedPriceRange] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
-  const [resources, setResources] = useState([])
+  const [resources, setResources] = useState<Resource[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -42,99 +71,15 @@ export default function ResourcesPage() {
   const fetchResources = async () => {
     setLoading(true)
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      const mockResources = [
-        {
-          id: 1,
-          title: 'Professional Office Space',
-          description: 'Fully equipped office space in Riyadh CBD. Perfect for startups and small businesses.',
-          category: 'office-space',
-          price: 2500,
-          isFree: false,
-          location: 'Riyadh',
-          rating: 4.8,
-          reviews: 34,
-          availability: 'Available now',
-          owner: 'Business Center LLC',
-          thumbnail: '/office-space.jpg'
-        },
-        {
-          id: 2,
-          title: 'Transportation Fleet Management System',
-          description: 'Complete fleet management software with GPS tracking and analytics.',
-          category: 'software',
-          price: 0,
-          isFree: true,
-          location: 'Jeddah',
-          rating: 4.6,
-          reviews: 28,
-          availability: 'Available',
-          owner: 'Tech Solutions Inc',
-          thumbnail: '/fleet-management.jpg'
-        },
-        {
-          id: 3,
-          title: 'Legal Compliance Toolkit',
-          description: 'Comprehensive toolkit for Saudi Arabian legal compliance and documentation.',
-          category: 'legal',
-          price: 800,
-          isFree: false,
-          location: 'Online',
-          rating: 4.9,
-          reviews: 56,
-          availability: 'Available',
-          owner: 'Legal Experts Co',
-          thumbnail: '/legal-toolkit.jpg'
-        },
-        {
-          id: 4,
-          title: 'Warehouse Storage Facilities',
-          description: 'Climate-controlled warehouse space with 24/7 security and loading docks.',
-          category: 'storage',
-          price: 1500,
-          isFree: false,
-          location: 'Dammam',
-          rating: 4.7,
-          reviews: 23,
-          availability: 'Limited availability',
-          owner: 'Logistics Hub',
-          thumbnail: '/warehouse.jpg'
-        },
-        {
-          id: 5,
-          title: 'Business Consulting Templates',
-          description: 'Professional templates for business proposals, presentations, and reports.',
-          category: 'templates',
-          price: 0,
-          isFree: true,
-          location: 'Online',
-          rating: 4.5,
-          reviews: 67,
-          availability: 'Available',
-          owner: 'Consulting Masters',
-          thumbnail: '/templates.jpg'
-        },
-        {
-          id: 6,
-          title: 'Heavy Equipment Rental',
-          description: 'Construction and industrial equipment rental with delivery and maintenance.',
-          category: 'equipment',
-          price: 3500,
-          isFree: false,
-          location: 'Riyadh',
-          rating: 4.4,
-          reviews: 19,
-          availability: 'Available',
-          owner: 'Equipment Pro',
-          thumbnail: '/heavy-equipment.jpg'
-        }
-      ]
-
-      setResources(mockResources)
+      const response = await fetch('/api/resources')
+      if (!response.ok) {
+        throw new Error('Failed to fetch resources')
+      }
+      const data = await response.json()
+      setResources(data.resources)
     } catch (error) {
       console.error('Failed to fetch resources:', error)
+      setResources([])
     } finally {
       setLoading(false)
     }
@@ -142,14 +87,14 @@ export default function ResourcesPage() {
 
   const filteredResources = resources.filter(resource => {
     const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         resource.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === 'all' || resource.category === selectedCategory
+                          resource.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = selectedCategory === 'all' || resource.category.slug === selectedCategory
     const matchesPrice = selectedPriceRange === 'all' ||
-                        (selectedPriceRange === 'free' && resource.isFree) ||
-                        (selectedPriceRange === 'paid' && !resource.isFree) ||
-                        (selectedPriceRange === 'low' && resource.price <= 1000) ||
-                        (selectedPriceRange === 'medium' && resource.price > 1000 && resource.price <= 3000) ||
-                        (selectedPriceRange === 'high' && resource.price > 3000)
+                         (selectedPriceRange === 'free' && resource.isFree) ||
+                         (selectedPriceRange === 'paid' && !resource.isFree) ||
+                         (selectedPriceRange === 'low' && resource.price <= 1000) ||
+                         (selectedPriceRange === 'medium' && resource.price > 1000 && resource.price <= 3000) ||
+                         (selectedPriceRange === 'high' && resource.price > 3000)
 
     return matchesSearch && matchesCategory && matchesPrice
   })
@@ -160,11 +105,9 @@ export default function ResourcesPage() {
         return a.price - b.price
       case 'price-high':
         return b.price - a.price
-      case 'rating':
-        return b.rating - a.rating
       case 'newest':
       default:
-        return b.id - a.id
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     }
   })
 
@@ -182,6 +125,10 @@ export default function ResourcesPage() {
         return Package
       case 'equipment':
         return Truck
+      case 'logistics':
+        return Truck
+      case 'technology':
+        return Package
       default:
         return Package
     }
@@ -200,11 +147,9 @@ export default function ResourcesPage() {
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src="/logo.png" alt="SourceKom" className="h-8 w-auto" />
               <span className="font-bold text-xl">SourceKom</span>
             </Link>
             <div className="flex items-center gap-4">
@@ -270,7 +215,7 @@ export default function ResourcesPage() {
                   <SelectItem value="paid">Paid</SelectItem>
                   <SelectItem value="low">SAR ≤ 1000</SelectItem>
                   <SelectItem value="medium">SAR 1000-3000</SelectItem>
-                  <SelectItem value="high">SAR > 3000</SelectItem>
+                  <SelectItem value="high">SAR {'>'} 3000</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -292,7 +237,7 @@ export default function ResourcesPage() {
         {/* Resources Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {sortedResources.map((resource) => {
-            const Icon = getCategoryIcon(resource.category)
+            const Icon = getCategoryIcon(resource.category.slug)
             return (
               <Card key={resource.id} className="hover:shadow-lg transition-shadow cursor-pointer">
                 <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
@@ -320,9 +265,7 @@ export default function ResourcesPage() {
                           <span>{resource.location}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 fill-current text-yellow-500" />
-                          <span>{resource.rating}</span>
-                          <span>({resource.reviews})</span>
+                          <span>({resource._count.reviews} reviews)</span>
                         </div>
                       </div>
                     </div>
@@ -338,13 +281,13 @@ export default function ResourcesPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Availability</span>
-                      <Badge variant={resource.availability.includes('Available') ? "default" : "secondary"}>
-                        {resource.availability}
+                      <Badge variant={resource.isPublished ? "default" : "secondary"}>
+                        {resource.isPublished ? 'Available' : 'Not Available'}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Owner:</span>
-                      <span className="font-medium">{resource.owner}</span>
+                      <span className="font-medium">{resource.author.name}</span>
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" className="flex-1" asChild>

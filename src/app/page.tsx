@@ -156,7 +156,7 @@ export default function Home() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-2">
-              <img src="/logo.svg" alt="SourceKom" className="h-8 w-auto" />
+              <img src="/logo.png" alt="SourceKom" className="h-8 w-auto" />
             </Link>
           </div>
 
@@ -915,7 +915,7 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <img src="/logo.svg" alt="SourceKom" className="h-8 w-auto" />
+                <img src="/logo.png" alt="SourceKom" className="h-8 w-auto" />
               </div>
               <p className="text-muted-foreground">
                 Revolutionizing resource management in Saudi Arabia through our
@@ -1012,10 +1012,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Sourcekom Agent */}
-      <SourcekomAgent />
-
-      {/* AI Assistant Button */}
+      {/* AI Assistant */}
       <AgentButton />
     </div>
   );

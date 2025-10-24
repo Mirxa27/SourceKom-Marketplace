@@ -35,7 +35,7 @@ async function main() {
       where: { slug: resource.slug },
       data: {
         thumbnail: resource.thumbnail,
-        images: resource.images
+        images: { set: resource.images }
       }
     })
     console.log(`Updated ${resource.slug}`)
