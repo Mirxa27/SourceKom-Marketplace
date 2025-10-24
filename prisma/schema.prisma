@@ -1,0 +1,468 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  avatar        String?
+  bio           String?
+  role          Role      @default(USER)
+  isActive      Boolean   @default(true)
+  emailVerified DateTime?
+  phone         String?
+  businessName  String?
+  businessType  String?
+  taxNumber     String?
+  commercialReg  String?
+  isVerified    Boolean   @default(false)
+  verificationDocs String[]  // JSON array of document URLs
+  language      String    @default("en") // en, ar
+  timezone      String    @default("Asia/Riyadh")
+  currency      String    @default("SAR")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  resources     Resource[]
+  purchases     Purchase[]
+  reviews       Review[]
+  conversations Conversation[]
+  messages      ConversationMessage[]
+  notifications Notification[]
+  agreements    Agreement[]
+  signatures    Signature[]
+  formSubmissions FormSubmission[]
+  contracts      Contract[]
+  aiGenerations  AIGeneration[]
+
+  @@map("sourcekom_users")
+}
+
+model Category {
+  id                String   @id @default(cuid())
+  name              String   @unique
+  slug              String   @unique
+  description       String?
+  icon              String?
+  color             String?
+  requiresAgreement Boolean @default(false)
+  requiredDocs      String[] // JSON array of required document types
+  complianceChecks  String[] // JSON array of compliance requirements
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  resources Resource[]
+  agreements Agreement[]
+  templates FormTemplate[]
+
+  @@map("categories")
+}
+
+model Resource {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  description     String
+  price           Float
+  isFree          Boolean  @default(false)
+  location        String
+  thumbnail       String?
+  images          String[] // JSON array of image URLs
+  availability    String   @default("available")
+  isPublished     Boolean  @default(false)
+  isFeatured      Boolean  @default(false)
+  tags            String[] // JSON array of tags
+  metadata        Json?    // Additional metadata
+  agreementId     String?  // Required agreement for this resource
+  complianceData  Json?    // Compliance-specific data
+  expiryDate      DateTime?
+  customFields    Json?    // Custom form fields
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  authorId   String
+  author     User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  purchases Purchase[]
+  reviews    Review[]
+  contracts  Contract[]
+
+  @@map("resources")
+}
+
+model Purchase {
+  id             String      @id @default(cuid())
+  amount         Float
+  currency       String      @default("SAR")
+  status         String      @default("pending")
+  paymentId      String?     // External payment ID
+  paymentMethod  String?     // e.g., "myfatoorah", "neoleap"
+  metadata       Json?       // Additional purchase data
+  agreementId    String?     // Signed agreement
+  contractId     String?     // Related contract
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Relations
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  agreement Agreement? @relation(fields: [agreementId], references: [id])
+  contract Contract? @relation(fields: [contractId], references: [id])
+
+  @@map("purchases")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceId])
+  @@map("reviews")
+}
+
+model Agreement {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  type          AgreementType
+  templateId    String   // Form template to use
+  content       Json     // Agreement content in multiple languages
+  variables     Json?    // Dynamic variables for template
+  isActive      Boolean  @default(true)
+  isRequired    Boolean  @default(false)
+  version       String   @default("1.0")
+  createdBy     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  template FormTemplate @relation(fields: [templateId], references: [id])
+  creator  User @relation(fields: [createdBy], references: [id])
+  signatures Signature[]
+  resources Resource[]
+  purchases Purchase[]
+
+  @@map("agreements")
+}
+
+model FormTemplate {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String?
+  type          FormType
+  fields        Json     // Form field definitions
+  validation    Json?    // Validation rules
+  styling       Json?    // Form styling
+  translations  Json?    // Multilingual translations
+  isActive      Boolean  @default(true)
+  category      String?  // Category for grouping
+  tags          String[] // JSON array of tags
+  createdBy     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  creator  User @relation(fields: [createdBy], references: [id])
+  agreements Agreement[]
+  formSubmissions FormSubmission[]
+  categories Category[]
+
+  @@map("form_templates")
+}
+
+model FormSubmission {
+  id            String   @id @default(cuid())
+  templateId    String
+  data          Json     // Submitted form data
+  status        String   @default("pending") // pending, approved, rejected
+  reviewedBy    String?
+  reviewNotes   String?
+  files         String[] // JSON array of uploaded file URLs
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  template FormTemplate @relation(fields: [templateId], references: [id])
+  reviewer User? @relation(fields: [reviewedBy], references: [id])
+  user     User @relation(fields: [userId], references: [id])
+
+  @@map("form_submissions")
+}
+
+model Signature {
+  id           String   @id @default(cuid())
+  agreementId  String
+  userId       String
+  signatureData Json     // Signature data (type, coordinates, etc.)
+  ipAddress    String?
+  userAgent    String?
+  signedAt     DateTime @default(now())
+  isValid      Boolean  @default(true)
+  version      String   @default("1.0")
+
+  // Relations
+  agreement Agreement @relation(fields: [agreementId], references: [id])
+  user      User @relation(fields: [userId], references: [id])
+
+  @@unique([agreementId, userId])
+  @@map("signatures")
+}
+
+model Contract {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  type          ContractType
+  content       Json     // Contract content in multiple languages
+  variables     Json?    // Dynamic variables
+  status        String   @default("draft") // draft, active, expired, terminated
+  effectiveDate DateTime?
+  expiryDate    DateTime?
+  parties       Json     // Contract parties information
+  terms         Json     // Contract terms and conditions
+  customFields  Json?    // Custom contract fields
+  createdBy     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  creator User @relation(fields: [createdBy], references: [id])
+  parties ContractParty[]
+  amendments ContractAmendment[]
+  purchases Purchase[]
+  resources Resource[]
+
+  @@map("contracts")
+}
+
+model ContractParty {
+  id         String   @id @default(cuid())
+  contractId String
+  userId     String?  // If user is a party
+  partyInfo  Json     // Party information (company, individual, etc.)
+  role       String   // buyer, seller, provider, etc.
+  signedAt   DateTime?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user     User? @relation(fields: [userId], references: [id])
+
+  @@map("contract_parties")
+}
+
+model ContractAmendment {
+  id          String   @id @default(cuid())
+  contractId  String
+  title       String
+  content     Json     // Amendment content
+  reason      String
+  status      String   @default("proposed") // proposed, approved, rejected
+  createdBy   String
+  createdAt   DateTime @default(now())
+  approvedAt   DateTime?
+
+  // Relations
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  creator  User @relation(fields: [createdBy], references: [id])
+
+  @@map("contract_amendments")
+}
+
+model DocumentTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  type        DocumentType
+  content     Json     // Document content with placeholders
+  variables   Json?    // Template variables
+  styling     Json?    // Document styling
+  isActive    Boolean  @default(true)
+  language    String   @default("en") // en, ar
+  category    String?
+  tags        String[]
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("document_templates")
+}
+
+model AIGeneration {
+  id          String   @id @default(cuid())
+  type         GenerationType
+  prompt       String   // User prompt
+  input        Json     // Input data
+  output       Json     // Generated content
+  model        String   // AI model used
+  provider     String   // AI provider used
+  tokens       Json?    // Token usage information
+  userId       String?
+  status       String   @default("completed")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("ai_generations")
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  messages ConversationMessage[]
+
+  @@map("conversations")
+}
+
+model ConversationMessage {
+  id         String   @id @default(cuid())
+  message    String
+  response   String
+  intent     String?
+  actions    String[] // JSON array of actions
+  data       Json?    // Additional message data
+  createdAt  DateTime @default(now())
+
+  // Relations
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("conversation_messages")
+}
+
+model AgentSettings {
+  id           String   @id @default(cuid())
+  provider     String   // e.g., "openai", "anthropic", "local"
+  apiKey       String
+  model        String
+  temperature  Float    @default(0.7)
+  maxTokens    Int      @default(2000)
+  systemPrompt String
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("agent_settings")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false)
+  data      Json?            // Additional notification data
+  createdAt DateTime         @default(now())
+
+  // Relations
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum Role {
+  USER
+  CREATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AgreementType {
+  SERVICE_AGREEMENT
+  PURCHASE_AGREEMENT
+  RENTAL_AGREEMENT
+  PARTNERSHIP_AGREEMENT
+  NDA_AGREEMENT
+  TERMS_AND_CONDITIONS
+  PRIVACY_POLICY
+  COMPLIANCE_AGREEMENT
+}
+
+enum FormType {
+  USER_REGISTRATION
+  BUSINESS_VERIFICATION
+  RESOURCE_LISTING
+  SERVICE_BOOKING
+  CONTRACT_AMENDMENT
+  DISPUTE_RESOLUTION
+  PAYMENT_INFORMATION
+  CONTACT_REQUEST
+}
+
+enum ContractType {
+  SERVICE_CONTRACT
+  RENTAL_CONTRACT
+  PURCHASE_CONTRACT
+  PARTNERSHIP_CONTRACT
+  EMPLOYMENT_CONTRACT
+  SERVICE_LEVEL_AGREEMENT
+}
+
+enum GenerationType {
+  CONTRACT_GENERATION
+  AGREEMENT_GENERATION
+  FORM_GENERATION
+  TEMPLATE_GENERATION
+  CONTENT_GENERATION
+}
+
+enum DocumentType {
+  CONTRACT_TEMPLATE
+  AGREEMENT_TEMPLATE
+  FORM_TEMPLATE
+  EMAIL_TEMPLATE
+  POLICY_DOCUMENT
+  CERTIFICATE
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}

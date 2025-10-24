@@ -1,0 +1,29 @@
+[build]
+  command = "NODE_ENV=production npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+  NODE_ENV = "production"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["sharp"]
+
+# Environment variables (these will be set in Netlify UI for production)
+# DATABASE_URL - Supabase PostgreSQL connection string
+# JWT_SECRET - Strong random secret for JWT signing
+# MYFATOORAH_API_KEY - MyFatoorah payment gateway API key
+# MYFATOORAH_BASE_URL - MyFatoorah API base URL
+# NEXT_PUBLIC_SUPABASE_URL - Supabase project URL
+# NEXT_PUBLIC_SUPABASE_ANON_KEY - Supabase anon key
+# NEXT_PUBLIC_BASE_URL - Your production domain URL
