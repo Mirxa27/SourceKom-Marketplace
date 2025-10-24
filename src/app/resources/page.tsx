@@ -25,7 +25,6 @@ import {
   FileText
 } from 'lucide-react'
 import Link from 'next/link'
-import SourcekomAgent from '@/components/agent/SourcekomAgent'
 
 interface Resource {
   id: string

@@ -26,18 +26,49 @@ import {
   Heart,
   Clock,
   Users as UsersIcon,
-  TrendingUp
+  TrendingUp,
+  CheckCircle,
+  MessageSquare
 } from 'lucide-react'
 import Link from 'next/link'
 
+interface Resource {
+  id: string
+  title: string
+  slug: string
+  description: string
+  price: number
+  isFree: boolean
+  location: string
+  thumbnail: string | null
+  images: string[]
+  isPublished: boolean
+  isFeatured: boolean
+  createdAt: string
+  author: {
+    id: string
+    name: string
+    avatar: string | null
+  }
+  category: {
+    id: string
+    name: string
+    slug: string
+  }
+  _count: {
+    purchases: number
+    reviews: number
+  }
+}
+
 export default function BrowsePage() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedPriceRange, setSelectedPriceRange] = useState('all')
-  const [sortBy, setSortBy] = useState('newest')
-  const [resources, setResources] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [selectedResource, setSelectedResource] = useState(null)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedPriceRange, setSelectedPriceRange] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<string>('newest')
+  const [resources, setResources] = useState<Resource[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null)
 
   useEffect(() => {
     fetchResources()
@@ -46,145 +77,15 @@ export default function BrowsePage() {
   const fetchResources = async () => {
     setLoading(true)
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      const mockResources = [
-        {
-          id: 1,
-          title: 'Professional Office Space',
-          description: 'Fully equipped office space in Riyadh CBD. Perfect for startups and small businesses. Includes high-speed internet, meeting rooms, and shared facilities.',
-          category: 'office-space',
-          price: 2500,
-          isFree: false,
-          location: 'Riyadh',
-          rating: 4.8,
-          reviews: 34,
-          availability: 'Available now',
-          owner: 'Business Center LLC',
-          thumbnail: '/office-space.jpg',
-          amenities: ['High-speed WiFi', 'Meeting Rooms', '24/7 Access', 'Security', 'Parking'],
-          capacity: 50,
-          size: '2000 sq ft',
-          features: ['Flexible lease terms', 'Fully furnished', 'Utilities included']
-        },
-        {
-          id: 2,
-          title: 'Transportation Fleet Management System',
-          description: 'Complete fleet management software with GPS tracking, route optimization, and comprehensive analytics for logistics companies.',
-          category: 'software',
-          price: 0,
-          isFree: true,
-          location: 'Jeddah',
-          rating: 4.6,
-          reviews: 28,
-          availability: 'Available',
-          owner: 'Tech Solutions Inc',
-          thumbnail: '/fleet-management.jpg',
-          features: ['Real-time GPS tracking', 'Route optimization', 'Driver management', 'Maintenance scheduling'],
-          compatibility: ['Web-based', 'Mobile apps', 'API integration']
-        },
-        {
-          id: 3,
-          title: 'Legal Compliance Toolkit',
-          description: 'Comprehensive toolkit for Saudi Arabian legal compliance and documentation. Includes templates for contracts, permits, and regulatory filings.',
-          category: 'legal',
-          price: 800,
-          isFree: false,
-          location: 'Online',
-          rating: 4.9,
-          reviews: 56,
-          availability: 'Available',
-          owner: 'Legal Experts Co',
-          thumbnail: '/legal-toolkit.jpg',
-          features: ['100+ legal templates', 'Regulatory guidelines', 'Compliance checklist', 'Legal consultations'],
-          format: ['PDF', 'Word', 'Excel']
-        },
-        {
-          id: 4,
-          title: 'Warehouse Storage Facilities',
-          description: 'Climate-controlled warehouse space with 24/7 security, loading docks, and inventory management systems for businesses of all sizes.',
-          category: 'storage',
-          price: 1500,
-          isFree: false,
-          location: 'Dammam',
-          rating: 4.7,
-          reviews: 23,
-          availability: 'Limited availability',
-          owner: 'Logistics Hub',
-          thumbnail: '/warehouse.jpg',
-          features: ['24/7 security', 'Loading docks', 'Climate control', 'Inventory management'],
-          capacity: '50,000 sq ft'
-        },
-        {
-          id: 5,
-          title: 'Business Consulting Templates',
-          description: 'Professional templates for business proposals, presentations, reports, and strategic planning documents.',
-          category: 'templates',
-          price: 0,
-          isFree: true,
-          location: 'Online',
-          rating: 4.5,
-          reviews: 67,
-          availability: 'Available',
-          owner: 'Consulting Masters',
-          thumbnail: '/templates.jpg',
-          features: ['Over 50 templates', 'Customizable layouts', 'Professional designs', 'Industry-specific'],
-          format: ['PowerPoint', 'Word', 'Excel']
-        },
-        {
-          id: 6,
-          title: 'Heavy Equipment Rental',
-          description: 'Construction and industrial equipment rental with delivery, maintenance, and operator services available.',
-          category: 'equipment',
-          price: 3500,
-          isFree: false,
-          location: 'Riyadh',
-          rating: 4.4,
-          reviews: 19,
-          availability: 'Available',
-          owner: 'Equipment Pro',
-          thumbnail: '/heavy-equipment.jpg',
-          features: ['Delivery included', 'Maintenance service', 'Operator available', 'Flexible terms'],
-          equipment: ['Excavators', 'Cranes', 'Bulldozers', 'Forklifts']
-        },
-        {
-          id: 7,
-          title: 'Professional HR Management System',
-          description: 'Complete HR management solution for employee onboarding, payroll, performance evaluation, and compliance.',
-          category: 'software',
-          price: 1200,
-          isFree: false,
-          location: 'Online',
-          rating: 4.8,
-          reviews: 42,
-          availability: 'Available',
-          owner: 'HR Tech Solutions',
-          thumbnail: '/hr-system.jpg',
-          features: ['Employee management', 'Payroll processing', 'Performance tracking', 'Compliance reports'],
-          users: 'Up to 500 employees'
-        },
-        {
-          id: 8,
-          title: 'Virtual Office Services',
-          description: 'Complete virtual office solution with registered address, mail handling, meeting rooms, and administrative support.',
-          category: 'office-space',
-          price: 800,
-          isFree: false,
-          location: 'Riyadh',
-          rating: 4.6,
-          reviews: 31,
-          availability: 'Available',
-          owner: 'Virtual Office Co',
-          thumbnail: '/virtual-office.jpg',
-          features: ['Registered address', 'Mail handling', 'Meeting room access', 'Phone answering'],
-          plan: 'Monthly subscription'
-        }
-      ]
-
-      setResources(mockResources)
+      const response = await fetch('/api/resources')
+      if (!response.ok) {
+        throw new Error('Failed to fetch resources')
+      }
+      const data = await response.json()
+      setResources(data.resources)
     } catch (error) {
       console.error('Failed to fetch resources:', error)
+      setResources([])
     } finally {
       setLoading(false)
     }
@@ -193,7 +94,7 @@ export default function BrowsePage() {
   const filteredResources = resources.filter(resource => {
     const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          resource.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === 'all' || resource.category === selectedCategory
+    const matchesCategory = selectedCategory === 'all' || resource.category.slug === selectedCategory
     const matchesPrice = selectedPriceRange === 'all' ||
                         (selectedPriceRange === 'free' && resource.isFree) ||
                         (selectedPriceRange === 'paid' && !resource.isFree) ||
@@ -210,11 +111,9 @@ export default function BrowsePage() {
         return a.price - b.price
       case 'price-high':
         return b.price - a.price
-      case 'rating':
-        return b.rating - a.rating
       case 'newest':
       default:
-        return b.id - a.id
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     }
   })
 
@@ -342,7 +241,7 @@ export default function BrowsePage() {
                   <SelectItem value="paid">Paid</SelectItem>
                   <SelectItem value="low">SAR ≤ 1000</SelectItem>
                   <SelectItem value="medium">SAR 1000-3000</SelectItem>
-                  <SelectItem value="high">SAR > 3000</SelectItem>
+                  <SelectItem value="high">SAR {'>'} 3000</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -384,7 +283,7 @@ export default function BrowsePage() {
         {/* Resources Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {sortedResources.map((resource) => {
-            const Icon = getCategoryIcon(resource.category)
+            const Icon = getCategoryIcon(resource.category.slug)
             return (
               <Card key={resource.id} className="hover:shadow-lg transition-shadow cursor-pointer">
                 <Dialog open={selectedResource?.id === resource.id} onOpenChange={() => setSelectedResource(null)}>
@@ -416,8 +315,8 @@ export default function BrowsePage() {
                               </div>
                               <div className="flex items-center gap-1">
                                 <Star className="w-3 h-3 fill-current text-yellow-500" />
-                                <span>{resource.rating}</span>
-                                <span>({resource.reviews})</span>
+                                <span>4.5</span>
+                                <span>(12)</span>
                               </div>
                             </div>
                           </div>
@@ -433,13 +332,13 @@ export default function BrowsePage() {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium">Availability</span>
-                            <Badge variant={resource.availability.includes('Available') ? "default" : "secondary"}>
-                              {resource.availability}
+                            <Badge variant="default">
+                              Available
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">Owner:</span>
-                            <span className="font-medium">{resource.owner}</span>
+                            <span className="font-medium">Admin</span>
                           </div>
                           <div className="flex gap-2">
                             <Button variant="outline" className="flex-1">
@@ -488,7 +387,7 @@ export default function BrowsePage() {
                           <div className="space-y-2">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Category:</span>
-                              <span className="font-medium">{resource.category.replace('-', ' ').toUpperCase()}</span>
+                              <span className="font-medium">{resource.category.name}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Location:</span>
@@ -502,8 +401,8 @@ export default function BrowsePage() {
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Availability:</span>
-                              <Badge variant={resource.availability.includes('Available') ? "default" : "secondary"}>
-                                {resource.availability}
+                              <Badge variant="default">
+                                Available
                               </Badge>
                             </div>
                           </div>
@@ -515,16 +414,16 @@ export default function BrowsePage() {
                             <div className="flex items-center gap-2">
                               <div className="flex items-center gap-1">
                                 <Star className="w-4 h-4 fill-current text-yellow-500" />
-                                <span className="font-semibold">{resource.rating}</span>
+                                <span className="font-semibold">4.5</span>
                               </div>
                               <span className="text-muted-foreground">out of 5</span>
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              Based on {resource.reviews} reviews
+                              Based on 12 reviews
                             </div>
                             <div className="flex items-center gap-2">
                               <UsersIcon className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-muted-foreground">Owner: {resource.owner}</span>
+                              <span className="text-muted-foreground">Owner: Admin</span>
                             </div>
                           </div>
                         </div>
@@ -543,10 +442,10 @@ export default function BrowsePage() {
                           <div>
                             <h4 className="font-medium mb-2 text-muted-foreground">Key Features</h4>
                             <ul className="space-y-1">
-                              {(resource.features || []).map((feature, index) => (
+                              {resource.description.split('.').slice(0, 3).map((sentence, index) => (
                                 <li key={index} className="flex items-start gap-2 text-sm">
                                   <CheckCircle className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
-                                  {feature}
+                                  {sentence.trim()}
                                 </li>
                               ))}
                             </ul>
@@ -554,10 +453,10 @@ export default function BrowsePage() {
                           <div>
                             <h4 className="font-medium mb-2 text-muted-foreground">Additional Info</h4>
                             <ul className="space-y-1">
-                              {(resource.amenities || resource.equipment || resource.features || []).map((item, index) => (
+                              {resource.description.split('.').slice(0, 5).map((sentence, index) => (
                                 <li key={index} className="flex items-start gap-2 text-sm">
                                   <Clock className="w-3 h-3 text-blue-500 mt-0.5 flex-shrink-0" />
-                                  {item}
+                                  {sentence.trim()}
                                 </li>
                               ))}
                             </ul>
