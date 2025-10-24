@@ -31,8 +31,7 @@ const querySchema = z.object({
   page: z.coerce.number().min(1, 'Page must be at least 1').default(1),
   limit: z.coerce.number().min(1).max(50, 'Limit must be between 1 and 50').default(20),
   search: z.string().max(50, 'Search term too long').optional(),
-  sort: z.enum(['name', 'resources', 'created']).default('name'),
-  includeInactive: z.coerce.boolean().optional()
+  sort: z.enum(['name', 'created']).default('name')
 })
 
 // Rate limiting
@@ -95,26 +94,20 @@ export async function GET(request: NextRequest) {
     const queryParams = Object.fromEntries(searchParams.entries())
     
     const validatedQuery = querySchema.parse(queryParams)
-    const { page, limit, search, sort, includeInactive } = validatedQuery
+    const { page, limit, search, sort } = validatedQuery
 
     // Build where clause
     const where: any = {}
-    if (!includeInactive) {
-      where.isActive = true
-    }
     if (search) {
       where.OR = [
-        { name: { contains: search } },
-        { description: { contains: search } }
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
       ]
     }
 
     // Build order by clause
     let orderBy: any = {}
     switch (sort) {
-      case 'resources':
-        orderBy = { resourcesCount: 'desc' }
-        break
       case 'created':
         orderBy = { createdAt: 'desc' }
         break
@@ -152,7 +145,6 @@ export async function GET(request: NextRequest) {
       description: category.description,
       color: category.color,
       icon: category.icon,
-      isActive: category.isActive,
       resourceCount: category._count.resources,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt
@@ -231,7 +223,7 @@ export async function POST(request: NextRequest) {
       where: { id: decoded.userId }
     })
 
-    if (!user || !user.isActive) {
+    if (!user) {
       return NextResponse.json(
         { error: 'User not found or inactive' },
         { status: 401 }
@@ -297,8 +289,7 @@ export async function POST(request: NextRequest) {
         slug,
         description: validatedData.description || null,
         color: validatedData.color || null,
-        icon: validatedData.icon || null,
-        isActive: true
+        icon: validatedData.icon || null
       }
     })
 
