@@ -95,8 +95,7 @@ export async function GET(request: NextRequest) {
         message: true,
         type: true,
         isRead: true,
-        createdAt: true,
-        updatedAt: true
+        createdAt: true
       }
     })
 
@@ -108,10 +107,8 @@ export async function GET(request: NextRequest) {
     // Get unread count
     const unreadCount = await db.notification.count({
       where: {
-        OR: [
-          { userId: user.id, isRead: false },
-          { isGlobal: true, isRead: false }
-        ]
+        userId: user.id,
+        isRead: false
       }
     })
 
