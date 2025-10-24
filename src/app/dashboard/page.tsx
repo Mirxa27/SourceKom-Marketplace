@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -521,8 +520,6 @@ export default function DashboardPage() {
         </Tabs>
       </div>
 
-      {/* Sourcekom Agent */}
-      <SourcekomAgent />
     </div>
   );
 }

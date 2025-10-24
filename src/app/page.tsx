@@ -37,7 +37,6 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import SourcekomAgent from "@/components/agent/SourcekomAgent";
 import AgentButton from "@/components/agent/AgentButton";
 
 export default function Home() {

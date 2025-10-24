@@ -149,8 +149,7 @@ export default function ResourcesPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-2">
-              <img src="/logo.png" alt="SourceKom" className="h-8 w-auto" />
-              <span className="font-bold text-xl">SourceKom</span>
+              <img src="/logo.png" alt="SourceKom" className="h-10 w-auto" />
             </Link>
             <div className="flex items-center gap-4">
               <Button variant="outline" asChild>

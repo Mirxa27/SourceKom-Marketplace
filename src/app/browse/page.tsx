@@ -29,7 +29,6 @@ import {
   TrendingUp
 } from 'lucide-react'
 import Link from 'next/link'
-import SourcekomAgent from '@/components/agent/SourcekomAgent'
 
 export default function BrowsePage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -616,8 +615,6 @@ export default function BrowsePage() {
         </div>
       </div>
 
-      {/* Sourcekom Agent */}
-      <SourcekomAgent />
     </div>
   )
 }

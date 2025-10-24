@@ -34,8 +34,7 @@ async function main() {
     await prisma.resource.update({
       where: { slug: resource.slug },
       data: {
-        thumbnail: resource.thumbnail,
-        images: { set: resource.images }
+        thumbnail: resource.thumbnail
       }
     })
     console.log(`Updated ${resource.slug}`)
