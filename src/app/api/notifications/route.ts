@@ -69,10 +69,7 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const where: any = {
-      OR: [
-        { userId: user.id },
-        { isGlobal: true }
-      ]
+      userId: user.id
     }
 
     if (unread !== undefined) {
@@ -98,8 +95,6 @@ export async function GET(request: NextRequest) {
         message: true,
         type: true,
         isRead: true,
-        actionUrl: true,
-        actionText: true,
         createdAt: true,
         updatedAt: true
       }

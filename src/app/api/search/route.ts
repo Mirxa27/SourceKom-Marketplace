@@ -72,10 +72,9 @@ export async function GET(request: NextRequest) {
       const resourceWhere: any = {
         isPublished: true,
         OR: [
-          { title: { contains: q } },
-          { description: { contains: q } },
-          { tags: { contains: q } },
-          { content: { contains: q } }
+          { title: { contains: q, mode: 'insensitive' } },
+          { description: { contains: q, mode: 'insensitive' } },
+          { tags: { has: q } }
         ]
       }
 
@@ -109,12 +108,11 @@ export async function GET(request: NextRequest) {
           orderBy = { price: 'desc' }
           break
         case 'popular':
-          orderBy = { downloadCount: 'desc' }
+          orderBy = { createdAt: 'desc' } // Use createdAt for now
           break
         default: // relevance
           orderBy = [
             { isFeatured: 'desc' },
-            { downloadCount: 'desc' },
             { createdAt: 'desc' }
           ]
       }
@@ -160,11 +158,10 @@ export async function GET(request: NextRequest) {
 
     // Search categories
     if (type === 'all' || type === 'categories') {
-      const categoryWhere = {
-        isActive: true,
+      const categoryWhere: any = {
         OR: [
-          { name: { contains: q } },
-          { description: { contains: q } }
+          { name: { contains: q, mode: 'insensitive' } },
+          { description: { contains: q, mode: 'insensitive' } }
         ]
       }
 
